@@ -19,15 +19,19 @@ logger = logging.getLogger(__name__)
 current_models_data: List[Dict] = []
 rx_change_arr: List[int] = []
 
+# Constants
+CONTAINER_PORT = int(os.getenv("CONTAINER_PORT", 7860))
+BACKEND_DOCKER_URL = f'http://123.217.93.26:59483/dockerrest'
+REDIS_IP = "123.217.93.26"
+REDIS_PORT = 59508
+
 # Redis connection
 try:
-    r = redis.Redis(host="redis", port=6379, db=0)
+    r = redis.Redis(host=REDIS_IP, port=REDIS_PORT, db=0)
 except Exception as e:
     logger.error(f"Failed to connect to Redis: {e}")
 
-# Constants
-CONTAINER_PORT = int(os.getenv("CONTAINER_PORT", 7860))
-BASE_URL = f"http://container_backend:{CONTAINER_PORT + 1}/dockerrest"
+
 
 def handle_errors(func):
     """Decorator to handle errors and log them."""
@@ -48,19 +52,19 @@ def get_gpu_data() -> List[Dict]:
 @handle_errors
 def get_docker_container_list() -> List[Dict]:
     """Fetch the list of Docker containers."""
-    response = requests.post(BASE_URL, json={"req_method": "list"})
+    response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "list"})
     return response.json() if response.status_code == 200 else []
 
 @handle_errors
 def docker_api_logs(req_model: str) -> str:
     """Fetch logs for a specific Docker container."""
-    response = requests.post(BASE_URL, json={"req_method": "logs", "req_model": req_model})
+    response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "logs", "req_model": req_model})
     return response.json().get("result_data", "") if response.status_code == 200 else "Error fetching logs"
 
 @handle_errors
 def docker_api_network(req_container_name: str) -> str:
     """Fetch network information for a specific Docker container."""
-    response = requests.post(BASE_URL, json={"req_method": "network", "req_container_name": req_container_name})
+    response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "network", "req_container_name": req_container_name})
     if response.status_code == 200:
         return response.json().get("result_data", {}).get("networks", {}).get("eth0", {}).get("rx_bytes", "")
     return "Error fetching network information"
@@ -68,26 +72,26 @@ def docker_api_network(req_container_name: str) -> str:
 @handle_errors
 def docker_api_start(req_model: str) -> Dict:
     """Start a Docker container."""
-    response = requests.post(BASE_URL, json={"req_method": "start", "req_model": req_model})
+    response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "start", "req_model": req_model})
     return response.json() if response.status_code == 200 else {"error": "Failed to start container"}
 
 @handle_errors
 def docker_api_stop(req_model: str) -> Dict:
     """Stop a Docker container."""
-    response = requests.post(BASE_URL, json={"req_method": "stop", "req_model": req_model})
+    response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "stop", "req_model": req_model})
     return response.json() if response.status_code == 200 else {"error": "Failed to stop container"}
 
 @handle_errors
 def docker_api_delete(req_model: str) -> Dict:
     """Delete a Docker container."""
-    response = requests.post(BASE_URL, json={"req_method": "delete", "req_model": req_model})
+    response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "delete", "req_model": req_model})
     return response.json() if response.status_code == 200 else {"error": "Failed to delete container"}
 
 @handle_errors
 def docker_api_create(req_model: str, req_pipeline_tag: str, req_port_model: int, req_port_vllm: int) -> Dict:
     """Create a Docker container."""
     req_container_name = str(req_model).replace('/', '_')
-    response = requests.post(BASE_URL, json={
+    response = requests.post(BACKEND_DOCKER_URL, json={
         "req_method": "create",
         "req_container_name": req_container_name,
         "req_model": req_model,
@@ -432,7 +436,7 @@ with gr.Blocks() as app:
         def refresh_container():
             try:
                 global docker_container_list
-                response = requests.post(f'http://container_backend:{str(int(os.getenv("CONTAINER_PORT"))+1)}/dockerrest', json={"req_method": "list"})
+                response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "list"})
                 docker_container_list = response.json()
                 return docker_container_list
             
@@ -562,7 +566,7 @@ with gr.Blocks() as app:
     def refresh_container_list():
         try:
             global docker_container_list
-            response = requests.post(f'http://container_backend:{str(int(os.getenv("CONTAINER_PORT"))+1)}/dockerrest', json={"req_method": "list"})
+            response = requests.post(BACKEND_DOCKER_URL, json={"req_method": "list"})
             docker_container_list = response.json()
             return docker_container_list
         except Exception as e:
