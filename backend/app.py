@@ -20,7 +20,12 @@ logger = logging.getLogger(__name__)
 # Global variables
 device_request = DeviceRequest(count=-1, capabilities=[["gpu"]])
 client = docker.from_env()
-r = redis.Redis(host="redis", port=6379, db=0)
+
+REDIS_IP = "123.217.93.26"
+REDIS_PORT = 59508
+r = redis.Redis(host=REDIS_IP, port=REDIS_PORT, db=0)
+
+
 
 
 def get_gpu_info() -> List[Dict[str, float]]:
