@@ -22,9 +22,8 @@ device_request = DeviceRequest(count=-1, capabilities=[["gpu"]])
 client = docker.from_env()
 
 REDIS_IP = "123.217.93.26"
-REDIS_PORT = 59508
+REDIS_PORT = 59028
 r = redis.Redis(host=REDIS_IP, port=REDIS_PORT, db=0)
-
 
 
 
