@@ -1,11 +1,21 @@
-FROM python:3.10-slim
+FROM nvidia/cuda:12.4.0-runtime-ubuntu22.04
 
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    python3-setuptools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
+# Copy your application code
+COPY . /usr/src/app
 WORKDIR /usr/src/app
 
-COPY . .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Expose the port your app runs on
 EXPOSE 7861
 
-CMD ["python", "app.py"]
+# Command to run your application
+CMD ["python3", "app.py"]
