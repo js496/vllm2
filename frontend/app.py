@@ -21,9 +21,9 @@ rx_change_arr: List[int] = []
 
 # Constants
 CONTAINER_PORT = int(os.getenv("CONTAINER_PORT", 7860))
-BACKEND_DOCKER_URL = f'http://123.217.93.26:59483/dockerrest'
+BACKEND_DOCKER_URL = f'http://123.217.93.26:59324/dockerrest'
 REDIS_IP = "123.217.93.26"
-REDIS_PORT = 59508
+REDIS_PORT = 59028
 
 # Redis connection
 try:
